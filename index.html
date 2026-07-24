@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Docyard — Convert, merge, split & compress documents</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="logo"><span class="mark">DY</span> Docyard</div>
+  <div class="tagline mono">FILES IN &nbsp;→&nbsp; FILES OUT</div>
+</header>
+
+<div class="wrap">
+  <section class="hero">
+    <div>
+      <h1>Every document,<br><em>reshaped</em> in seconds.</h1>
+      <p class="lede">Convert between PDF, Word, PowerPoint and Excel, merge and split pages, and shrink files down — entirely in your browser. Nothing you upload here ever leaves your device.</p>
+      <div class="hero-meta">
+        <div class="stat"><div class="num">12</div><div class="lbl">Tools</div></div>
+        <div class="stat"><div class="num">0</div><div class="lbl">Files uploaded to a server</div></div>
+        <div class="stat"><div class="num">0s</div><div class="lbl">Sign-up</div></div>
+      </div>
+    </div>
+    <div class="tray">
+      <div class="paper-card p1"><div class="fold"></div><span class="ext mono">.XLSX</span><div class="lines"><span></span><span></span><span></span></div></div>
+      <div class="paper-card p2"><div class="fold"></div><span class="ext mono">.PDF</span><div class="lines"><span></span><span></span><span></span></div></div>
+      <div class="paper-card p3"><div class="fold"></div><span class="ext mono">.DOCX</span><div class="lines"><span></span><span></span><span></span></div></div>
+      <div class="stamp">CONVERTED<br>&amp; READY</div>
+    </div>
+  </section>
+
+  <div class="section-head"><span class="idx mono">01</span><h2>Convert to PDF</h2><div class="rule"></div></div>
+  <div class="tool-grid">
+    <button class="tool-card" data-tool="word-to-pdf"><span class="tool-icon" style="background:var(--ink-blue)">DOC</span><span><span class="tool-title">Word to PDF</span><br><span class="tool-sub">.docx → .pdf</span></span></button>
+    <button class="tool-card" data-tool="ppt-to-pdf"><span class="tool-icon" style="background:var(--gold)">PPT</span><span><span class="tool-title">PowerPoint to PDF</span><br><span class="tool-sub">.pptx → .pdf</span></span></button>
+    <button class="tool-card" data-tool="excel-to-pdf"><span class="tool-icon" style="background:var(--archive-teal)">XLS</span><span><span class="tool-title">Excel to PDF</span><br><span class="tool-sub">.xlsx → .pdf</span></span></button>
+    <button class="tool-card" data-tool="jpg-to-pdf"><span class="tool-icon" style="background:var(--gold)">JPG</span><span><span class="tool-title">JPG to PDF</span><br><span class="tool-sub">image → .pdf</span></span></button>
+    <button class="tool-card" data-tool="html-to-pdf"><span class="tool-icon" style="background:var(--ink-blue)">&lt;/&gt;</span><span><span class="tool-title">HTML to PDF</span><br><span class="tool-sub">.html → .pdf</span></span></button>
+  </div>
+
+  <div class="section-head"><span class="idx mono">02</span><h2>Convert from PDF</h2><div class="rule"></div></div>
+  <div class="tool-grid">
+    <button class="tool-card" data-tool="pdf-to-jpg"><span class="tool-icon" style="background:var(--stamp-red)">PDF</span><span><span class="tool-title">PDF to JPG</span><br><span class="tool-sub">.pdf → .jpg (.zip)</span></span></button>
+    <button class="tool-card" data-tool="pdf-to-word"><span class="tool-icon" style="background:var(--stamp-red)">PDF</span><span><span class="tool-title">PDF to Word</span><br><span class="tool-sub">.pdf → .docx, text only</span></span></button>
+    <button class="tool-card" data-tool="pdf-to-ppt"><span class="tool-icon" style="background:var(--stamp-red)">PDF</span><span><span class="tool-title">PDF to PowerPoint</span><br><span class="tool-sub">.pdf → .pptx</span></span></button>
+    <button class="tool-card" data-tool="pdf-to-excel"><span class="tool-icon" style="background:var(--stamp-red)">PDF</span><span><span class="tool-title">PDF to Excel</span><br><span class="tool-sub">.pdf → .xlsx, text only</span></span></button>
+  </div>
+
+  <div class="section-head"><span class="idx mono">03</span><h2>Organize &amp; compress</h2><div class="rule"></div></div>
+  <div class="tool-grid">
+    <button class="tool-card" data-tool="merge-pdf"><span class="tool-icon" style="background:var(--ink)">⊕</span><span><span class="tool-title">Merge PDF</span><br><span class="tool-sub">Combine files</span></span></button>
+    <button class="tool-card" data-tool="split-pdf"><span class="tool-icon" style="background:var(--ink)">⊟</span><span><span class="tool-title">Split PDF</span><br><span class="tool-sub">Extract pages</span></span></button>
+    <button class="tool-card" data-tool="compress-pdf"><span class="tool-icon" style="background:var(--stamp-red)">↓</span><span><span class="tool-title">Compress PDF</span><br><span class="tool-sub">Shrink file size</span></span></button>
+    <button class="tool-card" data-tool="compress-image"><span class="tool-icon" style="background:var(--gold)">↓</span><span><span class="tool-title">Compress Image</span><br><span class="tool-sub">JPG / PNG / WebP</span></span></button>
+  </div>
+
+  <div id="workbench">
+    <!-- Generic single/multi file uploader panels, shown/hidden by app.js -->
+    <div class="bench" id="bench-generic">
+      <div class="bench-head">
+        <h3 id="bench-title">Tool</h3>
+        <button class="bench-close" id="bench-close">Close ✕</button>
+      </div>
+      <p class="small" id="bench-note" style="color:var(--graphite); margin-top:-8px;"></p>
+
+      <div class="dropzone" id="dropzone">
+        <p class="big">Drop files here, or click to browse</p>
+        <p class="small" id="dropzone-hint">Accepted formats depend on the tool selected</p>
+      </div>
+      <input type="file" id="file-input" style="display:none">
+
+      <div class="file-list" id="file-list"></div>
+
+      <div class="bench-options" id="bench-options"></div>
+
+      <button class="btn-primary" id="run-btn" disabled>Select a file to continue</button>
+      <div class="progress-bar" id="progress-bar"><div id="progress-fill"></div></div>
+      <div class="status" id="status"></div>
+    </div>
+  </div>
+
+  <footer>
+    <span>Docyard — self-hosted document toolkit</span>
+    <span class="mono">MERGE · SPLIT · CONVERT · COMPRESS</span>
+  </footer>
+</div>
+
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
+<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://unpkg.com/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
+<script src="https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
