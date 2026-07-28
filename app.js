@@ -14,6 +14,46 @@ if (typeof pdfjsLib !== 'undefined') {
   });
 })();
 
+// ---------- What's New ----------
+const WHATS_NEW = {
+  version: '2.3.2',
+  items: [
+    '<b>Improved:</b> Remove Watermark now has an "Auto-detect" mode (the new default) — it reads each page\'s actual watermark color and calibrates itself, instead of you having to guess Light/Medium/Strong.',
+    '<b>Added:</b> cache-busted asset URLs, so a new version always loads fresh instead of a browser or CDN potentially serving an old cached copy.',
+    '<b>From v2.3.1:</b> fixed the "What\'s new" button not opening (script-ordering bug), and improved Remove Watermark to target neutral-gray pixels specifically with edge cleanup.',
+    '<b>From v2.3:</b> Remove Watermark and this What\'s new panel were both introduced.',
+    '<b>From v2.2:</b> fixed Word/Excel/HTML → PDF producing black or blank pages on long documents, added automatic OCR for scanned PDFs, added Organize PDF and PDF to Text, fixed unreadable dropdowns in dark mode.',
+  ],
+};
+
+(function () {
+  const btn = document.getElementById('whats-new-btn');
+  const overlay = document.getElementById('whats-new-overlay');
+  const closeBtn = document.getElementById('whats-new-close');
+  const dot = document.getElementById('new-dot');
+  const versionEl = document.getElementById('whats-new-version');
+  const listEl = document.getElementById('whats-new-list');
+  if (!btn || !overlay) return;
+
+  versionEl.textContent = 'v' + WHATS_NEW.version;
+  listEl.innerHTML = WHATS_NEW.items.map(i => `<li>${i}</li>`).join('');
+
+  if (localStorage.getItem('docyard-seen-version') !== WHATS_NEW.version) {
+    dot.classList.add('show');
+  }
+
+  function open() {
+    overlay.classList.add('show');
+    dot.classList.remove('show');
+    localStorage.setItem('docyard-seen-version', WHATS_NEW.version);
+  }
+  function close() { overlay.classList.remove('show'); }
+
+  btn.addEventListener('click', open);
+  closeBtn.addEventListener('click', close);
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+})();
+
 const TOOLS = {
   'word-to-pdf':   { title: 'Word to PDF',       accept: '.docx',                 hint: 'Accepts .docx',
     note: 'Converted via DOCX→HTML in your browser. Complex layouts, tracked changes, and embedded objects may not carry over exactly.' },
@@ -39,6 +79,8 @@ const TOOLS = {
     note: 'Drag a page to reorder, rotate or delete it, then save. Rendering thumbnails may take a moment for large PDFs.' },
   'watermark-pdf': { title: 'Watermark PDF',     accept: '.pdf',                  hint: 'Accepts .pdf',
     note: 'Adds a diagonal, repeating text watermark to every page.' },
+  'remove-watermark': { title: 'Remove Watermark', accept: '.pdf',                hint: 'Accepts .pdf',
+    note: 'Best-effort: auto-detects the watermark\'s actual color per page and whitens pale, neutral-gray, semi-transparent stamps (including this site\'s own Watermark tool), with edge cleanup to avoid ghosting. It will NOT remove solid/opaque watermarks, logos, or colored watermarks that resemble real content. Like Compress PDF\'s strong mode, this rasterizes each page, so text is no longer selectable afterward.' },
   'compress-pdf':  { title: 'Compress PDF',      accept: '.pdf',                  hint: 'Accepts .pdf',
     note: 'Light mode re-packs the file losslessly. Strong mode rasterizes each page as a JPEG — much smaller, but text is no longer selectable.' },
   'compress-image':{ title: 'Compress Image',    accept: '.jpg,.jpeg,.png,.webp', hint: 'Accepts .jpg, .png or .webp' },
@@ -190,6 +232,15 @@ function renderOptions() {
     slider.addEventListener('input', () => {
       document.getElementById('wm-opacity-val').textContent = Math.round(slider.value * 100) + '%';
     });
+  } else if (activeTool === 'remove-watermark') {
+    optionsEl.innerHTML = `
+      <label for="rw-strength">Removal strength</label>
+      <select id="rw-strength">
+        <option value="auto" selected>Auto-detect (recommended)</option>
+        <option value="210,18">Light — only very faint, near-white watermarks</option>
+        <option value="225,30">Medium</option>
+        <option value="236,55">Strong — catches darker watermarks too, may fade light gray content</option>
+      </select>`;
   }
 }
 
@@ -222,7 +273,7 @@ function labelFor(key) {
     'word-to-pdf': 'Convert to PDF', 'excel-to-pdf': 'Convert to PDF', 'ppt-to-pdf': 'Convert to PDF',
     'pdf-to-word': 'Convert to Word', 'pdf-to-excel': 'Convert to Excel', 'pdf-to-ppt': 'Convert to PowerPoint',
     'pdf-to-jpg': 'Convert to JPG', 'pdf-to-text': 'Convert to Text',
-    'organize-pdf': 'Save PDF', 'watermark-pdf': 'Add Watermark',
+    'organize-pdf': 'Save PDF', 'watermark-pdf': 'Add Watermark', 'remove-watermark': 'Remove Watermark',
   };
   return labels[key] || 'Convert';
 }
@@ -250,6 +301,7 @@ async function runActiveTool() {
       case 'ppt-to-pdf': await runPptToPdf(); break;
       case 'pdf-to-text': await runPdfToText(); break;
       case 'watermark-pdf': await runWatermarkPdf(); break;
+      case 'remove-watermark': await runRemoveWatermark(); break;
       case 'organize-pdf': await runOrganizeSave(); break;
       default: throw new Error('Unknown tool.');
     }
@@ -680,6 +732,127 @@ async function runWatermarkPdf() {
   });
   const out = await doc.save();
   downloadBlob(new Blob([out], { type: 'application/pdf' }), file.name.replace(/\.pdf$/i, '') + '-watermarked.pdf');
+}
+
+// ---------- Remove Watermark (best-effort: whiten pale/semi-transparent stamps) ----------
+// This targets neutral-gray, washed-out pixels — not just "any light pixel" — which is
+// what a typical semi-transparent stamped watermark looks like once blended over a white
+// page. Requiring near-equal R/G/B (not just high brightness) means it's far less likely
+// to also erase light-colored real content like a pale highlight or a light table header,
+// which only checking brightness would do. A second pass then relaxes the criteria
+// slightly around pixels already marked, to clean up the faint anti-aliased edge halo
+// that's otherwise left behind around removed watermark text.
+//
+// "Auto-detect" builds a histogram of near-neutral, non-white, non-black pixel lightness
+// values for the page and finds the dominant peak — that peak is almost always the
+// watermark's actual blended color, so the threshold is calibrated to what's really on
+// THIS page instead of a guessed preset. Falls back to the Medium preset if no clear
+// peak is found (e.g. the page has no watermark at all), so it won't over-aggressively
+// alter a clean page.
+//
+// This is still a brightness/neutrality filter, not real watermark detection — it can't
+// identify or remove a solid, opaque watermark or a logo, since there's no way to tell
+// that apart from real content by color alone.
+function detectWatermarkThreshold(d, w, h) {
+  const buckets = new Array(256).fill(0);
+  const step = 4 * 7; // sample every 7th pixel for speed
+  let sampled = 0;
+  for (let p = 0; p < d.length; p += step) {
+    const r = d[p], g = d[p + 1], b = d[p + 2];
+    const lightness = (r + g + b) / 3;
+    const spread = Math.max(r, g, b) - Math.min(r, g, b);
+    sampled++;
+    if (spread <= 40 && lightness > 120 && lightness < 253) {
+      buckets[Math.round(lightness)]++;
+    }
+  }
+  let peak = -1, peakCount = 0;
+  for (let v = 0; v < 256; v++) {
+    if (buckets[v] > peakCount) { peakCount = buckets[v]; peak = v; }
+  }
+  // Require the peak to cover a meaningful share of sampled pixels before trusting it —
+  // otherwise it's just noise, not a real repeated watermark color.
+  if (peak < 0 || peakCount < sampled * 0.01) return { threshold: 225, tolerance: 30 };
+  return { threshold: Math.max(120, peak - 10), tolerance: 35 };
+}
+
+async function runRemoveWatermark() {
+  const file = files[0];
+  const mode = document.getElementById('rw-strength').value;
+  const manual = mode === 'auto' ? null : mode.split(',').map(n => parseInt(n, 10));
+  const bytes = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+  const { PDFDocument } = PDFLib;
+  const outDoc = await PDFDocument.create();
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const viewport = page.getViewport({ scale: 2.2 });
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width; canvas.height = viewport.height;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    await page.render({ canvasContext: ctx, viewport }).promise;
+
+    const w = canvas.width, h = canvas.height;
+    const imgData = ctx.getImageData(0, 0, w, h);
+    const d = imgData.data;
+
+    const [threshold, tolerance] = manual || (() => {
+      const auto = detectWatermarkThreshold(d, w, h);
+      return [auto.threshold, auto.tolerance];
+    })();
+
+    const pixelCount = w * h;
+    const marked = new Uint8Array(pixelCount);
+
+    // Pass 1: strict match — neutral gray, above the lightness threshold.
+    for (let idx = 0; idx < pixelCount; idx++) {
+      const p = idx * 4;
+      const r = d[p], g = d[p + 1], b = d[p + 2];
+      const lightness = (r + g + b) / 3;
+      const spread = Math.max(r, g, b) - Math.min(r, g, b);
+      if (lightness >= threshold && spread <= tolerance) marked[idx] = 1;
+    }
+
+    // Pass 2: relaxed match, only for pixels touching an already-marked neighbor —
+    // cleans up anti-aliased edges without loosening the criteria globally.
+    const relaxedThreshold = threshold - 22;
+    const relaxedTolerance = tolerance + 15;
+    const toWhiten = new Uint8Array(pixelCount);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const idx = y * w + x;
+        if (marked[idx]) { toWhiten[idx] = 1; continue; }
+        const p = idx * 4;
+        const r = d[p], g = d[p + 1], b = d[p + 2];
+        const lightness = (r + g + b) / 3;
+        const spread = Math.max(r, g, b) - Math.min(r, g, b);
+        if (lightness < relaxedThreshold || spread > relaxedTolerance) continue;
+        const hasMarkedNeighbor =
+          (x > 0 && marked[idx - 1]) || (x < w - 1 && marked[idx + 1]) ||
+          (y > 0 && marked[idx - w]) || (y < h - 1 && marked[idx + w]);
+        if (hasMarkedNeighbor) toWhiten[idx] = 1;
+      }
+    }
+
+    for (let idx = 0; idx < pixelCount; idx++) {
+      if (toWhiten[idx]) {
+        const p = idx * 4;
+        d[p] = 255; d[p + 1] = 255; d[p + 2] = 255;
+      }
+    }
+    ctx.putImageData(imgData, 0, 0);
+
+    const jpegBytes = dataUrlToBytes(canvas.toDataURL('image/jpeg', 0.92));
+    const img = await outDoc.embedJpg(jpegBytes);
+    const pg = outDoc.addPage([viewport.width, viewport.height]);
+    pg.drawImage(img, { x: 0, y: 0, width: viewport.width, height: viewport.height });
+    showProgress(15 + (70 * i) / pdf.numPages);
+  }
+  const outBytes = await outDoc.save();
+  downloadBlob(new Blob([outBytes], { type: 'application/pdf' }), file.name.replace(/\.pdf$/i, '') + '-cleaned.pdf');
 }
 
 // ---------- Organize PDF: render thumbnails ----------

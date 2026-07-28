@@ -8,7 +8,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="theme-color" content="#0A101C">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=2.3.2">
 <script>
   (function () {
     var saved = localStorage.getItem('docyard-theme');
@@ -32,6 +32,9 @@
   </div>
   <div class="header-right">
     <div class="tagline mono">FILES IN &nbsp;→&nbsp; FILES OUT</div>
+    <button class="whats-new-btn" id="whats-new-btn" title="See what's new">
+      ✨<span class="wn-label"> What's new</span><span class="new-dot" id="new-dot"></span>
+    </button>
     <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
       <span class="icon sun">☀</span><span class="icon moon">☾</span>
     </button>
@@ -44,7 +47,7 @@
       <h1>Every document,<br><em>reshaped</em> in seconds.</h1>
       <p class="lede">Convert between PDF, Word, PowerPoint and Excel, merge and split pages, and shrink files down — entirely in your browser. Nothing you upload here ever leaves your device.</p>
       <div class="hero-meta">
-        <div class="stat glass"><div class="num">16</div><div class="lbl">Tools</div></div>
+        <div class="stat glass"><div class="num">17</div><div class="lbl">Tools</div></div>
         <div class="stat glass"><div class="num">0</div><div class="lbl">Files uploaded to a server</div></div>
         <div class="stat glass"><div class="num">0s</div><div class="lbl">Sign-up</div></div>
       </div>
@@ -81,6 +84,7 @@
     <button class="tool-card" data-tool="split-pdf"><span class="tool-icon" style="background:var(--ink)">⊟</span><span><span class="tool-title">Split PDF</span><br><span class="tool-sub">Extract pages</span></span></button>
     <button class="tool-card" data-tool="organize-pdf"><span class="tool-icon" style="background:var(--ink)">⇅</span><span><span class="tool-title">Organize PDF</span><br><span class="tool-sub">Reorder, rotate, delete pages</span></span></button>
     <button class="tool-card" data-tool="watermark-pdf"><span class="tool-icon" style="background:var(--ink-blue)">WM</span><span><span class="tool-title">Watermark PDF</span><br><span class="tool-sub">Stamp text on every page</span></span></button>
+    <button class="tool-card" data-tool="remove-watermark"><span class="tool-icon" style="background:var(--danger)">⊘</span><span><span class="tool-title">Remove Watermark</span><br><span class="tool-sub">Lighten faint stamps</span></span></button>
     <button class="tool-card" data-tool="compress-pdf"><span class="tool-icon" style="background:var(--stamp-red)">↓</span><span><span class="tool-title">Compress PDF</span><br><span class="tool-sub">Shrink file size</span></span></button>
     <button class="tool-card" data-tool="compress-image"><span class="tool-icon" style="background:var(--gold)">↓</span><span><span class="tool-title">Compress Image</span><br><span class="tool-sub">JPG / PNG / WebP</span></span></button>
   </div>
@@ -116,11 +120,21 @@
       <img src="logo-icon.png" class="logo-icon" alt="">
       <img src="logo-word-light.png" class="logo-word logo-light" alt="Docyard">
       <img src="logo-word-dark.png" class="logo-word logo-dark" alt="Docyard">
-      <span class="version-badge mono">v2.2</span>
+      <span class="version-badge mono">v2.3.2</span>
     </span>
     <span class="mono">MERGE · SPLIT · CONVERT · COMPRESS</span>
     <span>Made with <span class="heart">❤</span> by <a class="credit-link" href="https://azmainfaik.vercel.app" target="_blank" rel="noopener noreferrer">Chowdhury Azmain Faik</a></span>
   </footer>
+</div>
+
+<div class="modal-overlay" id="whats-new-overlay">
+  <div class="modal-panel glass">
+    <div class="modal-head">
+      <h3>What's new — <span id="whats-new-version"></span></h3>
+      <button class="bench-close" id="whats-new-close">Close ✕</button>
+    </div>
+    <ul class="whats-new-list" id="whats-new-list"></ul>
+  </div>
 </div>
 
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
@@ -134,6 +148,7 @@
      has no embedded text layer (e.g. a scanned document), to avoid a multi-MB
      download for the common case where it isn't needed. See app.js: ensureTesseract(). -->
 <script src="https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=2.3.2"></script>
+
 </body>
 </html>

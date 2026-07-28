@@ -2,7 +2,38 @@
 
 All notable changes to Docyard are tracked here. The current version is shown in the site footer.
 
-## v2.2 (current)
+## v2.3.2 (current)
+- Re-verified the "What's new" button/modal end to end (duplicate IDs, exact script
+  ordering, every ID cross-referenced, CSS rules, event-listener conflicts) — found no
+  remaining code issue. Added cache-busted asset URLs (`app.js?v=...`, `styles.css?v=...`)
+  so each new version is guaranteed to load fresh instead of a browser or CDN edge cache
+  potentially serving a stale copy — the likely explanation if this is still not working
+  for you after this update.
+- Improved Remove Watermark further: added an "Auto-detect" mode (now the default) that
+  builds a histogram of each page's near-neutral pixel colors and calibrates the removal
+  threshold to the watermark actually present on that page, instead of requiring a
+  guessed Light/Medium/Strong preset.
+
+## v2.3.1
+- Fixed the "What's new" button doing nothing when clicked — the modal's HTML was placed
+  after `app.js` in the page, so the script queried for it before it existed in the DOM.
+  Moved the modal markup before the script tags.
+- Improved Remove Watermark accuracy: it now requires pixels to be both light *and*
+  neutral gray (not just any light pixel), which catches stronger/darker watermarks with
+  far less risk of also fading light-colored real content, plus a second pass that cleans
+  up anti-aliased edge residue left around removed watermark text.
+
+## v2.3
+- New tool: **Remove Watermark** — whitens pale/semi-transparent watermarks by brightness
+  threshold (works well on typical faint stamped watermarks, including ones made with
+  this site's own Watermark PDF tool). This is a best-effort brightness filter, not real
+  watermark detection — it can't remove a solid/opaque watermark or a logo, and like
+  Compress PDF's strong mode, it rasterizes each page.
+- New: a "What's new" button in the header opens a panel summarizing what changed in the
+  current version, with a small dot indicator for returning visitors who haven't seen it
+  yet (tracked locally, nothing sent anywhere).
+
+## v2.2
 - Fixed Word/Excel/HTML → PDF producing black or blank pages on large documents — long
   documents were exceeding the browser's maximum canvas size in a single capture; now
   captured one page at a time instead.

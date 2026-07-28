@@ -140,11 +140,29 @@ header.site {
 [data-theme="dark"] .footer-logo img.logo-word.logo-light { display: none; }
 [data-theme="dark"] .footer-logo img.logo-word.logo-dark { display: block; }
 .footer-logo { display: flex; align-items: center; }
-.header-right { display: flex; align-items: center; gap: 16px; }
+.header-right { display: flex; align-items: center; gap: 12px; }
 .tagline { font-size: 11.5px; color: var(--text-mute); white-space: nowrap; }
+
+.whats-new-btn {
+  position: relative;
+  display: flex; align-items: center; gap: 4px;
+  background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 999px;
+  padding: 7px 14px; font-size: 12.5px; color: var(--text); cursor: pointer;
+  font-family: inherit; white-space: nowrap;
+}
+.whats-new-btn:hover { border-color: var(--accent-2); }
+.new-dot {
+  position: absolute; top: -2px; right: -2px; width: 9px; height: 9px; border-radius: 50%;
+  background: var(--accent-pink); display: none; box-shadow: 0 0 0 2px var(--page-bg);
+}
+.new-dot.show { display: block; }
 
 @media (max-width: 640px) {
   .tagline { display: none; }
+}
+@media (max-width: 480px) {
+  .whats-new-btn .wn-label { display: none; }
+  .whats-new-btn { padding: 7px 10px; }
 }
 
 .theme-toggle {
@@ -378,6 +396,24 @@ input[type="text"] {
   border: 1px solid var(--glass-border);
   border-radius: 999px; font-weight: 600; font-size: 13.5px; text-decoration: none;
 }
+
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 5000;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(8, 10, 16, 0.55);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  padding: 20px;
+}
+.modal-overlay.show { display: flex; }
+.modal-panel {
+  max-width: 480px; width: 100%; max-height: 80vh; overflow: auto;
+  padding: 26px; border-radius: var(--radius-lg);
+  animation: rise 0.22s ease;
+}
+.modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 12px; }
+.modal-head h3 { margin: 0; font-size: 18px; }
+.whats-new-list { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 12px; font-size: 14px; color: var(--text-soft); line-height: 1.5; }
+.whats-new-list b { color: var(--text); }
 
 footer {
   margin: 90px 0 40px; padding: 20px 24px;
